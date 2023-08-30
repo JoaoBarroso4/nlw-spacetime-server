@@ -58,7 +58,7 @@ export async function memoriesRoutes(app: FastifyInstance) {
     return memory;
   });
 
-  app.post("/memories", async (request) => {
+  app.post("/memories", async (request, reply) => {
     const bodySchema = z.object({
       content: z.string(),
       coverUrl: z.string().url(),
@@ -71,7 +71,7 @@ export async function memoriesRoutes(app: FastifyInstance) {
       data: { content, coverUrl, isPublic, userId: request.user.sub },
     });
 
-    return memory;
+    return reply.status(201).send(memory);
   });
 
   app.put("/memories/:id", async (request, reply) => {
@@ -86,7 +86,6 @@ export async function memoriesRoutes(app: FastifyInstance) {
       isPublic: z.coerce.boolean().default(false),
     });
     const { content, coverUrl, isPublic } = bodySchema.parse(request.body);
-    console.log(content, coverUrl, isPublic);
 
     let memory = await prisma.memory.findUniqueOrThrow({ where: { id } });
 

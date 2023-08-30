@@ -1,7 +1,7 @@
 import { randomUUID } from "crypto";
 import { extname, resolve } from "path";
 import { FastifyInstance } from "fastify";
-import { createWriteStream } from "fs";
+import { createWriteStream, unlink } from "fs";
 
 import { pipeline } from "stream";
 import { promisify } from "util";
@@ -10,9 +10,15 @@ const pump = promisify(pipeline);
 
 export async function uploadRoutes(app: FastifyInstance) {
   app.post("/upload", async (request, reply) => {
+    if (Number(request.headers["content-length"]) > 50_000_000) {
+      return reply.status(400).send({
+        message: "File size too big.",
+      });
+    }
+
     const upload = await request.file({
       limits: {
-        fileSize: 5_242_880, // 5mb
+        fileSize: 50_000_000, // 50mb
       },
     });
 
@@ -31,7 +37,7 @@ export async function uploadRoutes(app: FastifyInstance) {
     const extension = extname(upload.filename);
 
     const fileName = `${fileId}${extension}`;
-    
+
     const writeStream = createWriteStream(
       resolve(__dirname, "../../uploads/", fileName)
     );
@@ -39,7 +45,21 @@ export async function uploadRoutes(app: FastifyInstance) {
     await pump(upload.file, writeStream);
 
     const fileUrl = `${request.protocol}://${request.hostname}/uploads/${fileName}`;
+    console.log(fileUrl);
+    return reply.status(201).send({ fileUrl });
+  });
 
-    return { fileUrl };
+  app.delete("/upload/:fileName", (request) => {
+    const { fileName } = request.params as { fileName: string };
+
+    const filePath = resolve(__dirname, "../../uploads/", fileName);
+
+    unlink(filePath, (err) => {
+      if (err) {
+        throw err;
+      }
+    });
+
+    return { message: "File deleted successfully." };
   });
 }
