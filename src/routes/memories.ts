@@ -38,6 +38,7 @@ export async function memoriesRoutes(app: FastifyInstance) {
           memory.content.length > 115
             ? memory.content.substring(0, 115).concat("...")
             : memory.content,
+        createdAt: memory.createdAt,
       };
     });
   });
@@ -115,5 +116,7 @@ export async function memoriesRoutes(app: FastifyInstance) {
     }
 
     await prisma.memory.delete({ where: { id } });
+
+    return reply.status(204).send();
   });
 }

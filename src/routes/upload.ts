@@ -49,7 +49,7 @@ export async function uploadRoutes(app: FastifyInstance) {
     return reply.status(201).send({ fileUrl });
   });
 
-  app.delete("/upload/:fileName", (request) => {
+  app.delete("/upload/:fileName", (request, reply) => {
     const { fileName } = request.params as { fileName: string };
 
     const filePath = resolve(__dirname, "../../uploads/", fileName);
@@ -60,6 +60,6 @@ export async function uploadRoutes(app: FastifyInstance) {
       }
     });
 
-    return { message: "File deleted successfully." };
+    return reply.status(204).send({ message: "File deleted successfully." });
   });
 }
