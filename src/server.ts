@@ -11,7 +11,7 @@ import { resolve } from "path";
 
 const app = fastify();
 
-const PORT = 3333;
+const PORT = Number(process.env.PORT);
 
 app.register(multipart);
 
@@ -26,7 +26,7 @@ app.register(cors, {
 });
 
 app.register(jwt, {
-  secret: "secret", //process.env.JWT_SECRET
+  secret: process.env.JWT_SECRET as string,
 });
 
 app.register(authRoutes);
